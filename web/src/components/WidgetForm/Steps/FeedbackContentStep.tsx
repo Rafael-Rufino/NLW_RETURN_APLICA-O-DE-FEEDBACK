@@ -1,6 +1,8 @@
 import { ArrowLeft } from "phosphor-react";
 import { FormEvent, useState } from "react";
+import { api } from "../../../service/api";
 import { CloseButton } from "../../CloseButton";
+import { Loading } from "../../Loading";
 import { ScreenshotButton } from "../ScreenshotButton";
 import { FeedbackType, feedbackTypes } from "./content";
 
@@ -17,16 +19,23 @@ export function FeedbackContentStep({
 }: FeedbackTypeStepProps) {
   const [comment, setComment] = useState("");
   const [screenshot, setScreenshot] = useState<string | null>(null);
+  const [isSendingFeedback, setIsSendingFeedback] = useState(false);
+
   const feedbackTypeInfo = feedbackTypes[feedbackType];
 
-  function handleSubmitFeedback(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmitFeedback(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    console.log({
-      screenshot,
+    setIsSendingFeedback(true);
+
+    await api.post("/feedbacks", {
+      type: feedbackType,
       comment,
+      screenshot,
     });
+    setIsSendingFeedback(false);
     onFeedbackSent();
   }
+
   return (
     <>
       <header>
@@ -63,14 +72,11 @@ export function FeedbackContentStep({
             onScreenshotTook={setScreenshot}
           />
           <button
-            disabled={comment.length === 0}
             type="submit"
-            className="p-2 bg-brand-500 rounded-md border-transparent flex-1 flex
-             justify-center items-center text-sm hover:bg-brand-300 focus:ontiline-none
-             focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-900
-             focus:ring-brand-500 transition-colors disabled: opacity-50 disabled:hover:bg-brand-500"
+            disabled={comment.length == 0 || isSendingFeedback}
+            className="p-2 bg-brand-500 rounded-md border-transparent flex-1 flex justify-center items-center text-sm text-white hover:bg-brand-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-900 focus:ring-brand-500 transition-colors disabled:opacity-50 disabled:hover:bg-brand-500"
           >
-            Enviar feedback
+            {isSendingFeedback ? <Loading /> : "Enviar Formulário"}
           </button>
         </footer>
       </form>
